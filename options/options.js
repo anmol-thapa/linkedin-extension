@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 
 async function load() {
   const stored = await chrome.storage.sync.get([
-    'openaiKey', 'hunterKey', 'spreadsheetId', 'resume', 'googleClientId',
+    'openaiKey', 'hunterKey', 'spreadsheetId', 'resume', 'googleClientId', 'networkPref', 'recruiterMode',
   ]);
 
   if (stored.openaiKey)      $('openai-key').value       = stored.openaiKey;
@@ -18,6 +18,13 @@ async function load() {
     $('resume').value = stored.resume;
     updateWordCount(stored.resume);
   }
+
+  if (stored.recruiterMode) $('recruiter-mode').checked = true;
+
+  const prefMap = { broad: 0, medium: 1, close: 2 };
+  const pref = stored.networkPref ?? 'medium';
+  $('network-pref-slider').value = prefMap[pref] ?? 1;
+  updatePrefUI($('network-pref-slider').value);
 
   // Show the redirect URI they need to register in GCP
   const { redirectUrl } = await chrome.runtime.sendMessage({ type: 'GET_REDIRECT_URL' });
@@ -47,6 +54,8 @@ async function save() {
     spreadsheetId:  $('sheet-id').value.trim(),
     resume:         $('resume').value.trim(),
     googleClientId: $('google-client-id').value.trim(),
+    networkPref:    ['broad','medium','close'][$('network-pref-slider').value] ?? 'medium',
+    recruiterMode:  $('recruiter-mode').checked,
   };
 
   await chrome.storage.sync.set(settings);
@@ -54,6 +63,20 @@ async function save() {
   const status = $('save-status');
   status.style.display = 'inline';
   setTimeout(() => { status.style.display = 'none'; }, 2000);
+}
+
+// ─── Networking preference slider ─────────────────────────────────────────────
+
+const PREF_LABELS = ['Very Broad', 'Medium', 'Close'];
+const PREF_DESCS  = [
+  'Any shared field or general space is a plus, even without direct experience overlap. Good for expanding your network early or across adjacent areas.',
+  'Moderate matching. Looks for meaningful overlap in skills, roles, or industry with reasonable leeway for adjacent experience.',
+  'Requires tight alignment in industry vertical and domain. Similar roles in clearly different spaces will score lower.',
+];
+
+function updatePrefUI(val) {
+  $('pref-label').textContent = PREF_LABELS[val];
+  $('pref-desc').textContent  = PREF_DESCS[val];
 }
 
 // ─── Word count ───────────────────────────────────────────────────────────────
@@ -165,9 +188,20 @@ async function handlePdfUpload(file) {
 // ─── Wire up buttons ──────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Tab switching
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById(`tab-${item.dataset.tab}`).classList.add('active');
+    });
+  });
+
   load();
 
   $('btn-save').addEventListener('click', save);
+  $('network-pref-slider').addEventListener('input', e => updatePrefUI(e.target.value));
   $('btn-cancel').addEventListener('click', () => window.close());
 
   $('resume').addEventListener('input', e => updateWordCount(e.target.value));

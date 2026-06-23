@@ -122,22 +122,34 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 // ─── Sheets API ──────────────────────────────────────────────────────────────
 
 async function appendToSheet(token, spreadsheetId, values) {
-  const range = 'Sheet1!A1';
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`;
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ values: [values] }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message ?? 'Sheets API error');
+  // Get column A to find first empty row after header (top-down)
+  const getRes = await fetch(`${base}/${encodeURIComponent('Sheet1!A:A')}`, { headers });
+  if (!getRes.ok) {
+    const err = await getRes.json();
+    throw new Error(err.error?.message ?? 'Sheets API error (get)');
+  }
+  const rows = (await getRes.json()).values ?? [];
+  // Start at index 1 (skip header row), find first empty slot
+  let nextRow = rows.length + 1;
+  for (let i = 1; i < rows.length; i++) {
+    if (!rows[i]?.some(cell => cell !== '' && cell != null)) {
+      nextRow = i + 1; // convert to 1-indexed
+      break;
+    }
   }
 
-  return res.json();
+  const putRes = await fetch(
+    `${base}/${encodeURIComponent(`Sheet1!A${nextRow}`)}?valueInputOption=USER_ENTERED`,
+    { method: 'PUT', headers, body: JSON.stringify({ values: [values] }) }
+  );
+
+  if (!putRes.ok) {
+    const err = await putRes.json();
+    throw new Error(err.error?.message ?? 'Sheets API error (write)');
+  }
+
+  return putRes.json();
 }

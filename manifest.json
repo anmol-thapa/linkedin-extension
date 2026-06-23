@@ -37,7 +37,7 @@
 
   "content_scripts": [
     {
-      "matches": ["https://www.linkedin.com/in/*"],
+      "matches": ["https://www.linkedin.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
@@ -50,9 +50,10 @@
   },
 
   "oauth2": {
-    "client_id": "YOUR_CLIENT_ID_HERE",
+    "client_id": "YOUR_GOOGLE_CLIENT_ID",
     "scopes": [
       "https://www.googleapis.com/auth/spreadsheets"
     ]
   }
 }
+  

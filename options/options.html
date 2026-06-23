@@ -23,87 +23,114 @@
       color: var(--text);
       background: var(--bg);
       min-height: 100vh;
-      padding: 40px 0 60px;
     }
-    .page {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 0 24px;
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
     }
-    h1 {
-      font-size: 22px;
-      font-weight: 700;
+
+    /* ── Left sidebar ── */
+    .sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 32px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 20px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-logo-icon {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: var(--primary); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo-name { font-weight: 700; font-size: 13px; color: var(--primary); }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      font-size: 13px; font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { color: var(--primary); border-left-color: var(--primary); background: #eff6ff; }
+    .nav-icon { font-size: 15px; }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      padding: 40px 48px 60px;
+      max-width: 640px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .panel-title {
+      font-size: 20px; font-weight: 700;
       margin-bottom: 4px;
     }
-    .subtitle {
-      color: var(--muted);
-      margin-bottom: 32px;
-      font-size: 13px;
+    .panel-subtitle {
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 28px;
     }
+
+    /* ── Cards ── */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      margin-bottom: 16px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted); margin-bottom: 16px;
     }
     .field { margin-bottom: 16px; }
     .field:last-child { margin-bottom: 0; }
     label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 5px;
-      font-size: 13px;
+      display: block; font-weight: 500;
+      margin-bottom: 5px; font-size: 13px;
     }
     .hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-      line-height: 1.4;
+      font-size: 12px; color: var(--muted);
+      margin-top: 4px; line-height: 1.5;
     }
-    input[type="text"],
-    input[type="password"],
-    textarea {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--text);
-      background: #fff;
+    input[type="text"], input[type="password"], textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-family: inherit;
+      color: var(--text); background: #fff;
       transition: border-color 0.15s;
     }
-    input[type="text"]:focus,
-    input[type="password"]:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--primary);
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+      outline: none; border-color: var(--primary);
     }
     textarea { resize: vertical; }
-    .row {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-    }
+    .row { display: flex; gap: 10px; align-items: flex-start; }
     .row input { flex: 1; }
+
+    /* ── Buttons ── */
     .btn {
-      padding: 9px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
+      padding: 9px 16px; border-radius: 6px;
+      font-size: 13px; font-weight: 500;
+      border: none; cursor: pointer;
+      white-space: nowrap; transition: background 0.15s;
+      font-family: inherit;
     }
     .btn-primary  { background: var(--primary); color: #fff; }
     .btn-primary:hover { background: var(--primary-hover); }
@@ -111,172 +138,248 @@
     .btn-secondary:hover { background: var(--border); }
     .btn-danger   { background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
     .btn-danger:hover { background: #fecaca; }
-    .google-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      flex-shrink: 0;
-    }
-    .dot.connected { background: var(--success); }
+
     .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 28px;
+      display: flex; justify-content: flex-end;
+      gap: 10px; margin-top: 24px;
     }
     #save-status {
-      font-size: 13px;
-      color: var(--success);
-      display: none;
-      align-self: center;
+      font-size: 13px; color: var(--success);
+      display: none; align-self: center;
     }
     a { color: var(--primary); }
 
-    /* Upload zone */
+    /* ── Google status ── */
+    .google-status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 6px;
+      background: var(--bg); border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
+    }
+    .dot.connected { background: var(--success); }
+
+    /* ── Upload zone ── */
     .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 28px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 28px 20px; text-align: center;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
       background: var(--bg);
     }
     .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--primary);
-      background: #eff6ff;
+      border-color: var(--primary); background: #eff6ff;
     }
     .upload-icon { font-size: 28px; margin-bottom: 8px; }
     .upload-text { font-size: 13px; color: var(--text); margin-bottom: 4px; }
     .upload-link { color: var(--primary); text-decoration: underline; cursor: pointer; }
     .upload-sub  { font-size: 12px; color: var(--muted); }
     .upload-status {
-      margin-top: 8px;
-      font-size: 12px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      margin-top: 8px; font-size: 12px;
+      padding: 8px 12px; border-radius: 6px;
+      display: flex; align-items: center; gap: 8px;
     }
     .upload-status.loading { background: #eff6ff; color: var(--primary); }
     .upload-status.success { background: #f0fdf4; color: var(--success); }
     .upload-status.error   { background: #fef2f2; color: var(--danger); }
     .hidden { display: none !important; }
 
+    /* ── Toggle switch ── */
+    .toggle-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; cursor: pointer;
+    }
+    .toggle-title { font-weight: 600; font-size: 13px; }
+    .toggle-wrap { flex-shrink: 0; position: relative; }
+    .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      display: block; width: 40px; height: 22px;
+      background: var(--border); border-radius: 100px;
+      transition: background 0.2s; cursor: pointer; position: relative;
+    }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-wrap input:checked + .toggle-track { background: var(--primary); }
+    .toggle-wrap input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); }
+
+    /* ── Slider ── */
+    .slider-labels {
+      display: flex; justify-content: space-between; margin-top: 5px;
+    }
+
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin {
-      display: inline-block;
-      width: 12px; height: 12px;
-      border: 2px solid currentColor;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
+      display: inline-block; width: 12px; height: 12px;
+      border: 2px solid currentColor; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <h1>Settings</h1>
-    <p class="subtitle">LinkedIn Networker — configure your API keys and resume once, then forget about it.</p>
+  <div class="layout">
 
-    <!-- AI & Email Keys -->
-    <div class="card">
-      <div class="card-title">API Keys</div>
-
-      <div class="field">
-        <label for="openai-key">OpenAI API Key</label>
-        <input type="password" id="openai-key" placeholder="sk-…" autocomplete="off" />
-        <div class="hint">Used for networking scores and message drafts. <a href="https://platform.openai.com/api-keys" target="_blank">Get a key →</a></div>
+    <!-- Left sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">LN</div>
+        <span class="sidebar-logo-name">Networker</span>
       </div>
-
-      <div class="field">
-        <label for="hunter-key">Hunter.io API Key <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="password" id="hunter-key" placeholder="…" autocomplete="off" />
-        <div class="hint">Used to look up company emails. Free tier: 25/month. <a href="https://hunter.io/api-keys" target="_blank">Get a key →</a></div>
+      <div class="nav-item active" data-tab="networking">
+        <span class="nav-icon">🎯</span> Networking
       </div>
-    </div>
+      <div class="nav-item" data-tab="personal">
+        <span class="nav-icon">👤</span> Personal Info
+      </div>
+      <div class="nav-item" data-tab="api">
+        <span class="nav-icon">🔑</span> API Settings
+      </div>
+    </nav>
 
-    <!-- Google Sheets -->
-    <div class="card">
-      <div class="card-title">Google Sheets</div>
+    <!-- Main content -->
+    <div class="content">
 
-      <div class="field">
-        <label for="google-client-id">Google OAuth Client ID <span style="font-weight:400;color:var(--muted)">(Web Application type)</span></label>
-        <input type="text" id="google-client-id" placeholder="123456789-abc.apps.googleusercontent.com" />
-        <div class="hint">
-          Create a <strong>Web Application</strong> credential in Google Cloud Console.<br/>
-          Add this as an Authorized Redirect URI: <span id="redirect-uri" style="font-family:monospace;font-size:11px;">loading…</span>
+      <!-- ── Networking Preferences ── -->
+      <div class="tab-panel active" id="tab-networking">
+        <div class="panel-title">Networking Preferences</div>
+        <p class="panel-subtitle">Control how the AI scores and targets profiles.</p>
+
+        <div class="card">
+          <div class="card-title">Targeting</div>
+          <label class="toggle-row" for="recruiter-mode">
+            <div>
+              <div class="toggle-title">Recruiter &amp; Referral Mode</div>
+              <div class="hint" style="margin-top:3px;">Boost scores for recruiters, HR, and people at target companies who could refer you — even outside your domain.</div>
+            </div>
+            <div class="toggle-wrap">
+              <input type="checkbox" id="recruiter-mode" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </div>
+          </label>
         </div>
-      </div>
 
-      <div class="field">
-        <label>Google Account</label>
-        <div class="google-status">
-          <div class="dot" id="google-dot"></div>
-          <span id="google-status-text">Not connected</span>
-          <div style="margin-left:auto;display:flex;gap:8px;">
-            <button class="btn btn-secondary" id="btn-google-connect">Connect</button>
-            <button class="btn btn-danger" id="btn-google-disconnect" style="display:none">Disconnect</button>
+        <div class="card">
+          <div class="card-title">Match Strictness</div>
+          <div class="field">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+              <label for="network-pref-slider" style="margin:0;">How closely should matches align with your background?</label>
+              <span id="pref-label" style="font-weight:700;font-size:13px;color:var(--primary);margin-left:12px;white-space:nowrap;">Medium</span>
+            </div>
+            <input type="range" id="network-pref-slider" min="0" max="2" step="1" value="1"
+              style="width:100%;accent-color:var(--primary);cursor:pointer;" />
+            <div class="slider-labels">
+              <span class="hint">Very Broad</span>
+              <span class="hint">Medium</span>
+              <span class="hint">Close</span>
+            </div>
+            <p id="pref-desc" class="hint" style="margin-top:12px;line-height:1.6;"></p>
           </div>
         </div>
       </div>
 
-      <div class="field">
-        <label for="sheet-id">Spreadsheet ID</label>
-        <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
-        <div class="hint">Found in your Google Sheet URL: docs.google.com/spreadsheets/d/<strong>[ID]</strong>/edit</div>
-      </div>
+      <!-- ── Personal Info ── -->
+      <div class="tab-panel" id="tab-personal">
+        <div class="panel-title">Personal Info</div>
+        <p class="panel-subtitle">Your resume is used to generate scores and draft messages.</p>
 
-      <div class="field">
-        <label>Sheet columns (auto-created)</label>
-        <div class="hint" style="font-size:11px;font-family:monospace;background:var(--bg);border:1px solid var(--border);padding:8px;border-radius:6px;line-height:1.8;">
-          Date | Name | Title | Company | School | Score | Industry Match | Overlap Tags | Mutual | Email | Notes | Profile URL
+        <div class="card">
+          <div class="card-title">Resume</div>
+
+          <div class="field">
+            <label>Upload Resume PDF</label>
+            <div class="upload-zone" id="upload-zone">
+              <input type="file" id="resume-file" accept=".pdf" hidden />
+              <div class="upload-icon">📄</div>
+              <div class="upload-text">Drop your resume PDF here or <span class="upload-link">browse</span></div>
+              <div class="upload-sub">PDF only · Parsed into ATS text via OpenAI</div>
+            </div>
+            <div id="upload-status" class="upload-status hidden"></div>
+          </div>
+
+          <div class="field">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+              <label for="resume" style="margin:0;">ATS Resume Text</label>
+              <span id="resume-word-count" class="hint" style="margin:0;"></span>
+            </div>
+            <textarea id="resume" rows="12" placeholder="Upload a PDF above, or paste your resume text manually.&#10;&#10;The more detail here, the better the networking score."></textarea>
+            <div class="hint">Sent directly from your browser to OpenAI — never stored on any server.</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Resume -->
-    <div class="card">
-      <div class="card-title">Your Resume / Background</div>
+      <!-- ── API Settings ── -->
+      <div class="tab-panel" id="tab-api">
+        <div class="panel-title">API Settings</div>
+        <p class="panel-subtitle">Keys are stored locally in your browser and never shared.</p>
 
-      <div class="field">
-        <label>Upload Resume PDF</label>
-        <div class="upload-zone" id="upload-zone">
-          <input type="file" id="resume-file" accept=".pdf" hidden />
-          <div class="upload-icon">📄</div>
-          <div class="upload-text">Drop your resume PDF here or <span class="upload-link">browse</span></div>
-          <div class="upload-sub">PDF only · Parsed by OpenAI into ATS text</div>
+        <div class="card">
+          <div class="card-title">OpenAI</div>
+          <div class="field">
+            <label for="openai-key">API Key</label>
+            <input type="password" id="openai-key" placeholder="sk-…" autocomplete="off" />
+            <div class="hint">Used for scores and message drafts. <a href="https://platform.openai.com/api-keys" target="_blank">Get a key →</a></div>
+          </div>
         </div>
-        <div id="upload-status" class="upload-status hidden"></div>
+
+        <div class="card">
+          <div class="card-title">Hunter.io <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px;">(optional)</span></div>
+          <div class="field">
+            <label for="hunter-key">API Key</label>
+            <input type="password" id="hunter-key" placeholder="…" autocomplete="off" />
+            <div class="hint">Email lookup. Free tier: 25/month. <a href="https://hunter.io/api-keys" target="_blank">Get a key →</a></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Google Sheets</div>
+
+          <div class="field">
+            <label for="google-client-id">OAuth Client ID <span style="font-weight:400;color:var(--muted)">(Web Application type)</span></label>
+            <input type="text" id="google-client-id" placeholder="123456789-abc.apps.googleusercontent.com" />
+            <div class="hint">
+              Create a <strong>Web Application</strong> credential in Google Cloud Console.<br/>
+              Authorized Redirect URI: <span id="redirect-uri" style="font-family:monospace;font-size:11px;">loading…</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Google Account</label>
+            <div class="google-status">
+              <div class="dot" id="google-dot"></div>
+              <span id="google-status-text">Not connected</span>
+              <div style="margin-left:auto;display:flex;gap:8px;">
+                <button class="btn btn-secondary" id="btn-google-connect">Connect</button>
+                <button class="btn btn-danger" id="btn-google-disconnect" style="display:none">Disconnect</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sheet-id">Spreadsheet ID</label>
+            <input type="text" id="sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
+            <div class="hint">From your Sheet URL: docs.google.com/spreadsheets/d/<strong>[ID]</strong>/edit</div>
+          </div>
+
+          <div class="field">
+            <label>Export columns</label>
+            <div class="hint" style="font-size:11px;font-family:monospace;background:var(--bg);border:1px solid var(--border);padding:8px;border-radius:6px;line-height:1.8;">
+              Date | Name | Title | Company | School | Score | Industry Match | Overlap Tags | Mutual | Email | Notes | Profile URL
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="field">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-          <label for="resume" style="margin:0">ATS Resume Text</label>
-          <span id="resume-word-count" class="hint" style="margin:0"></span>
-        </div>
-        <textarea id="resume" rows="10" placeholder="Upload a PDF above, or paste your resume text manually.&#10;&#10;The more detail here, the better the networking score."></textarea>
-        <div class="hint">Sent directly from your browser to OpenAI.</div>
+      <div class="actions">
+        <span id="save-status">✓ Saved</span>
+        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-save">Save Settings</button>
       </div>
-    </div>
 
-    <div class="actions">
-      <span id="save-status">✓ Saved</span>
-      <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-save">Save Settings</button>
     </div>
   </div>
 

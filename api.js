@@ -32,15 +32,15 @@ You will be given the user's resume/background and a LinkedIn profile.
 Return ONLY valid JSON (no markdown, no commentary) in this exact shape:
 {
   "score": <0-100 integer>,
-  "industry_match": "<high|medium|low>",
+  "industry_match": "<High|Medium|Low>",
   "overlap_tags": ["<tag1>", "<tag2>", ...],
   "reasoning": "<2-3 sentence plain English explanation>"
 }
 
 Scoring weights:
 - Industry/company-type alignment (40%): Do they work in the same space? (big tech, startup, fintech, etc.)
-- Resume overlap (35%): Shared skills, companies, schools, or role type
-- Mutual connections (25%): More shared connections = higher score
+- Resume overlap (30%): Shared skills, companies, schools, or role type
+- Relatability (30%): Things that the profiles could relate with (current area, hometown, education, interests, programs, etc.)
 
 Be honest. A low score is useful too — it tells the user not to waste time.`;
 

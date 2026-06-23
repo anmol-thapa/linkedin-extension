@@ -127,18 +127,9 @@
       display: flex; flex-direction: column;
       padding: 6px 14px 4px; gap: 4px;
     }
-    .position-row {
-      display: flex; align-items: baseline; gap: 6px;
-      padding: 2px 14px 10px; overflow: hidden;
-    }
-    .position-row .stat-label { white-space: nowrap; flex-shrink: 0; }
-    .position-row .stat-value {
-      font-size: 12px; font-weight: 600; color: #18181b;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
-    }
-    .stat { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.stat { display: flex; align-items: baseline; gap: 6px; }
     .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #71717a; white-space: nowrap; flex-shrink: 0; }
-    .stat-value { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .stat-value { font-size: 12px; font-weight: 600; word-break: break-word; }
 
     /* Divider */
     .divider { height: 1px; background: #e4e4e7; margin: 0 14px; }
@@ -196,6 +187,8 @@
       border-radius: 100px; padding: 1px 8px; font-size: 11px;
     }
     .reasoning { font-size: 12px; line-height: 1.5; color: #71717a; padding: 0 14px 10px; }
+    .pen-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #71717a; width: 100%; margin-bottom: 4px; }
+    .pen-tag { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 
     /* Email */
     .email-result { font-size: 12px; padding: 4px 14px 10px; color: #71717a; word-break: break-all; }
@@ -262,6 +255,7 @@
   const tab = document.createElement('button');
   tab.id = 'tab';
   tab.textContent = 'LN';
+  if (!location.href.includes('/in/')) tab.style.display = 'none';
   shadow.appendChild(tab);
 
   const panel = document.createElement('div');
@@ -313,13 +307,10 @@
 
         <div class="stats">
           <div class="stat"><span class="stat-label">Company</span><span class="stat-value" id="s-company">—</span></div>
+          <div class="stat"><span class="stat-label">Position</span><span class="stat-value" id="s-position">—</span></div>
           <div class="stat"><span class="stat-label">School</span><span class="stat-value" id="s-school">—</span></div>
           <div class="stat"><span class="stat-label">Mutual</span><span class="stat-value" id="s-mutual">—</span></div>
-          <div class="stat"><span class="stat-label">Degree</span><span class="stat-value" id="s-degree">—</span></div>
-        </div>
-        <div class="position-row">
-          <span class="stat-label">Position</span>
-          <span class="stat-value" id="s-position">—</span>
+          <div class="stat"><span class="stat-label">Connection</span><span class="stat-value" id="s-degree">—</span></div>
         </div>
 
         <div class="divider"></div>
@@ -349,6 +340,7 @@
             </div>
           </div>
           <p class="reasoning" id="score-reasoning"></p>
+          <div class="hidden" id="score-penalties" style="padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:4px;"></div>
         </div>
 
         <div class="divider"></div>
@@ -452,7 +444,7 @@
 
     try {
       profileData = scrapeProfile();
-      render(profileData);
+      await render(profileData);
       showState('main');
     } catch (err) {
       $('error-msg').textContent = err.message || 'Could not scrape profile.';
@@ -464,7 +456,7 @@
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
-  function render(p) {
+  async function render(p) {
     $('p-name').textContent = p.name ?? 'Unknown';
     // Show headline; if missing, fall back to "Title at Company"
     $('p-headline').textContent = p.headline
@@ -495,6 +487,14 @@
     if (p.email) {
       $('email-result').textContent = p.email;
       $('email-result').classList.remove('muted');
+    }
+
+    // Load cached Hunter email for this profile
+    const emailKey = `email_${p.profileUrl}`;
+    const stored = await chrome.storage.local.get(emailKey);
+    if (stored[emailKey]) {
+      $('email-result').textContent = stored[emailKey];
+      $('btn-email').textContent = 'Look up again';
     }
   }
 
@@ -529,6 +529,24 @@
       s.className = 'tag'; s.textContent = t; tagsEl.appendChild(s);
     });
     $('score-reasoning').textContent = r.reasoning ?? '';
+
+    // Penalties (debug)
+    const penEl = $('score-penalties');
+    penEl.innerHTML = '';
+    if (r.penalties?.length && r.score < 90) {
+      const label = document.createElement('div');
+      label.className = 'pen-label';
+      label.textContent = 'What hurt the score';
+      penEl.appendChild(label);
+      r.penalties.forEach(p => {
+        const s = document.createElement('span');
+        s.className = 'tag pen-tag'; s.textContent = '↓ ' + p; penEl.appendChild(s);
+      });
+      show('score-penalties');
+    } else {
+      hide('score-penalties');
+    }
+
     show('score-result');
   }
 
@@ -592,7 +610,14 @@
 
     const parts = (profileData?.name ?? '').split(' ');
     const result = await findEmail(hunterKey, parts[0] ?? '', parts.slice(1).join(' '), profileData?.currentCompany ?? '');
-    $('email-result').textContent = result ? `${result.email} (${result.confidence}% confidence)` : 'No email found';
+    if (result?.email) {
+      $('email-result').textContent = result.email;
+      $('btn-email').textContent = 'Look up again';
+      const emailKey = `email_${profileData.profileUrl}`;
+      await chrome.storage.local.set({ [emailKey]: result.email });
+    } else {
+      $('email-result').textContent = 'No email found';
+    }
     $('btn-email').disabled = false;
   });
 
@@ -721,7 +746,7 @@
   function getAbout() {
     const section = findSection('About');
     if (!section) return { about: null, aboutSkills: [] };
-    const raw = section.innerText.replace(/^About\s*/i,'').trim();
+    const raw = section.innerText.replace(/^About\s*/i,'').replace(/[…\.]{1,3}\s*see more\s*$/i,'').replace(/…\s*more\s*$/i,'').trim();
     if (!raw) return { about: null, aboutSkills: [] };
 
     // LinkedIn appends "Top skills\nSkill1 • Skill2..." at the bottom
@@ -746,6 +771,12 @@
     // ARIA list (LinkedIn sometimes uses this)
     const list = section.querySelector('[role="list"]');
     if (list) return [...list.children];
+    // LinkedIn 2025: div-based entity-collection-item (no ul/li at all)
+    const allItems = [...section.querySelectorAll('[componentkey*="entity-collection-item"]')];
+    if (allItems.length) {
+      // Only top-level — exclude items nested inside another entity-collection-item
+      return allItems.filter(el => !el.parentElement?.closest('[componentkey*="entity-collection-item"]'));
+    }
     return [];
   }
 
@@ -775,61 +806,90 @@
   }
 
   function getExperience() {
-    const section = findSection('Experience');
+    // Prefer data-testid selector — immune to class/h2 changes
+    const section =
+      document.querySelector('[data-testid*="ExperienceTopLevelSection"]') ??
+      findSection('Experience');
     if (!section) return [];
-    const items = getSectionItems(section);
-    if (!items.length) return [];
 
     const results = [];
 
+    // ── LinkedIn 2025 DOM: div-based entity-collection-item ──────────────────
+    const allItems = [...section.querySelectorAll('[componentkey*="entity-collection-item-"]')];
+    if (allItems.length) {
+      // Top-level only — exclude items nested inside another entity-collection-item
+      const topItems = allItems.filter(
+        el => !el.parentElement?.closest('[componentkey*="entity-collection-item-"]')
+      );
+
+      for (const item of topItems) {
+        // Grouped detection: nested entity-collection-item divs OR a <ul> with <li> roles
+        const nestedComponentItems = [...item.querySelectorAll('[componentkey*="entity-collection-item-"]')]
+          .filter(n => DATE_RE.test(n.innerText));
+        const nestedUl = item.querySelector('ul');
+        const nestedLiRoles = nestedUl
+          ? [...nestedUl.querySelectorAll('li')].filter(li => DATE_RE.test(li.innerText))
+          : [];
+        const isGrouped = nestedComponentItems.length > 0 || nestedLiRoles.length > 0;
+
+        if (isGrouped) {
+          // Company: read <p> elements in the item header, skip anything inside sub-role containers
+          const company = [...item.querySelectorAll('p')]
+            .filter(p => !p.closest('ul') && !p.closest('[componentkey*="entity-collection-item-"]'))
+            .map(p => p.textContent.trim())
+            .find(t => t.length > 1 && t.length < 100 && !DATE_RE.test(t)
+              && !/^\d+\s*(mos?|yr)/i.test(t) && !/·/.test(t) && !SECTION_HEADERS.has(t))
+            ?? null;
+          const roleItems = nestedComponentItems.length ? nestedComponentItems : nestedLiRoles;
+          for (const n of roleItems) {
+            const ls = n.innerText.trim().split('\n').map(l => l.trim()).filter(Boolean);
+            const title = ls[0];
+            const duration = ls.find(l => DATE_RE.test(l)) ?? null;
+            if (title && !SECTION_HEADERS.has(title)) results.push({ title, company, duration });
+          }
+        } else {
+          // Simple entry: line 0 = title, line 1 = "Company · Type"
+          const ls = item.innerText.trim().split('\n').map(l => l.trim()).filter(Boolean);
+          const title = ls[0];
+          if (!title || SECTION_HEADERS.has(title)) continue;
+          const companyLine = ls.find((l, i) => i > 0 && !DATE_RE.test(l) && l.length > 1 && l.length < 150);
+          const company = companyLine?.split('·')[0].trim() ?? null;
+          const duration = ls.find(l => DATE_RE.test(l)) ?? null;
+          results.push({ title, company, duration });
+        }
+      }
+
+      results.sort((a, b) => (/Present/i.test(b.duration ?? '') ? 1 : 0) - (/Present/i.test(a.duration ?? '') ? 1 : 0));
+      return results;
+    }
+
+    // ── Old DOM fallback: ul/li structure ────────────────────────────────────
+    const items = getSectionItems(section);
     for (const li of items) {
       const lines = li.innerText.trim().split('\n').map(l => l.trim()).filter(Boolean);
       if (!lines.length) continue;
-
-      // Grouped entry = has a nested list whose items themselves contain date strings
-      const nestedUlEl = li.querySelector('ul');
-      const nestedItems = nestedUlEl
-        ? [...nestedUlEl.children].filter(n => n.tagName === 'LI' && DATE_RE.test(n.innerText))
+      const nestedUl = li.querySelector('ul');
+      const nestedLi = nestedUl
+        ? [...nestedUl.children].filter(n => n.tagName === 'LI' && DATE_RE.test(n.innerText))
         : [];
-      const isGrouped = nestedItems.length > 0;
-
-      if (isGrouped) {
-        // For grouped entries the company name is often in a visually-hidden span or img alt.
-        // We explicitly search outside the nested <ul> to avoid picking up sub-role links.
-        const company = companyFromGroupedLi(li, nestedUlEl);
-
-        for (const nli of nestedItems) {
-          const nLines = nli.innerText.trim().split('\n').map(l => l.trim()).filter(Boolean);
-          if (!nLines.length) continue;
-          const title = nLines[0];
-          const duration = nLines.find(l => DATE_RE.test(l)) ?? null;
+      if (nestedLi.length) {
+        const company = companyFromGroupedLi(li, nestedUl);
+        for (const nli of nestedLi) {
+          const nls = nli.innerText.trim().split('\n').map(l => l.trim()).filter(Boolean);
+          const title = nls[0];
+          const duration = nls.find(l => DATE_RE.test(l)) ?? null;
           if (title && !SECTION_HEADERS.has(title)) results.push({ title, company, duration });
         }
       } else {
-        // Simple single-role entry.
-        // LinkedIn's format: line 0 = title, line 1 = "Company · Type", line 2 = dates.
-        // DO NOT use anchor.innerText — it returns the title (not company) because the
-        // anchor wraps the whole entry in LinkedIn's 2025 DOM.
         const title = lines[0];
         if (!title || SECTION_HEADERS.has(title)) continue;
-
-        // Line 1 is "Company · Employment-type" — split on · to get just the name
-        let company = null;
         const companyLine = lines.find((l, i) => i > 0 && !DATE_RE.test(l) && l.length > 1 && l.length < 150);
-        if (companyLine) company = companyLine.split('·')[0].trim();
-
+        const company = companyLine?.split('·')[0].trim() ?? null;
         const duration = lines.find(l => DATE_RE.test(l)) ?? null;
         results.push({ title, company, duration });
       }
     }
-
-    // Sort: current roles (Present) always first
-    results.sort((a, b) => {
-      const aP = /Present/i.test(a.duration ?? '');
-      const bP = /Present/i.test(b.duration ?? '');
-      return aP && !bP ? -1 : !aP && bP ? 1 : 0;
-    });
-
+    results.sort((a, b) => (/Present/i.test(b.duration ?? '') ? 1 : 0) - (/Present/i.test(a.duration ?? '') ? 1 : 0));
     return results;
   }
 
@@ -902,11 +962,11 @@
   // API CALLS (direct fetch from content script)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async function openAIChat(apiKey, messages) {
+  async function openAIChat(apiKey, messages, temperature = 0.3) {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-5.4-mini', messages, temperature: 0.3 }),
+      body: JSON.stringify({ model: 'gpt-5.4-mini', messages, temperature }),
     });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message ?? 'OpenAI error'); }
     return (await res.json()).choices[0].message.content;
@@ -917,18 +977,61 @@
     if (p.name) lines.push(`Name: ${p.name}`);
     if (p.headline) lines.push(`Headline: ${p.headline}`);
     if (p.about) lines.push(`About: ${p.about}`);
-    if (p.experience?.length) { lines.push('Experience:'); p.experience.slice(0,5).forEach(e => lines.push(`  - ${e.title}${e.company ? ' at '+e.company : ''}`)); }
-    if (p.education?.length)  { lines.push('Education:');  p.education.forEach(e => lines.push(`  - ${e.school}${e.degree ? ': '+e.degree : ''}`)); }
-    if (p.skills?.length) lines.push(`Skills: ${p.skills.slice(0,15).join(', ')}`);
+    if (p.experience?.length) {
+      lines.push('Experience:');
+      p.experience.forEach(e => {
+        let entry = `  - ${e.title}${e.company ? ' at ' + e.company : ''}`;
+        if (e.duration) entry += ` (${e.duration})`;
+        lines.push(entry);
+      });
+    }
+    if (p.education?.length) {
+      lines.push('Education:');
+      p.education.forEach(e => {
+        let entry = `  - ${e.school}`;
+        if (e.degree) entry += `: ${e.degree}`;
+        if (e.years) entry += ` (${e.years})`;
+        lines.push(entry);
+      });
+    }
+    if (p.skills?.length) lines.push(`Skills: ${p.skills.join(', ')}`);
     return lines.join('\n');
   }
 
   async function getNetworkingScore(apiKey, resume, profile) {
-    const system = `Return ONLY valid JSON (no markdown):
-{"score":<0-100>,"industry_match":"<high|medium|low>","overlap_tags":["..."],"reasoning":"<2-3 sentences>"}
-Weights: industry/company-type 40%, skill/resume overlap 35%, mutual connections 25%. Be honest.`;
-    const user = `MY RESUME:\n${resume}\n\nPROFILE:\n${formatProfile(profile)}\n\nMutual connections: ${profile.mutualConnections ?? 0}`;
-    const raw = await openAIChat(apiKey, [{role:'system',content:system},{role:'user',content:user}]);
+    const { networkPref = 'medium', recruiterMode = false } = await chrome.storage.sync.get(['networkPref', 'recruiterMode']);
+
+    const prefInstructions = {
+      broad: `SCORING MODE — VERY BROAD: Any shared field or general space is a significant plus even without direct experience overlap. Be generous — adjacent industries, tangentially related roles, and shared educational backgrounds all count.`,
+      medium: `SCORING MODE — MEDIUM: Look for meaningful overlap in skills, roles, or industry. Some leeway for adjacent experience is fine. Weight direct matches heavily but don't penalize for reasonable differences in seniority or sub-domain.`,
+      close: `SCORING MODE — CLOSE: Require tight alignment in industry vertical and domain. Sub-domain mismatches in different industries should meaningfully lower the score.`,
+    };
+
+    const system = `You are a networking assistant that helps evaluate how valuable a LinkedIn connection would be.
+You will be given the user's resume/background and a LinkedIn profile.
+
+Think through each component first, then output the JSON. The fields MUST be internally consistent — reasoning must explain the score, and industry_match must reflect the industry alignment component.
+
+Scoring weights (must add to 100):
+- Industry/company-type alignment (40%): Same space? (big tech, startup, fintech, academia, etc.) → sets industry_match: High=32-40pts, Medium=16-31pts, Low=0-15pts
+- Resume overlap (30%): Shared skills, role type, companies, or schools
+- Relatability (25%): Shared location, hometown, education, interests, programs, or extracurriculars
+- Mutual connections (5%): Adds up to 5pts. 0 mutual = neutral, never subtract.
+
+Rules:
+- industry_match MUST match the industry alignment component: High if that component ≥32, Medium if 16-31, Low if <16
+- reasoning MUST be consistent with the score — don't say "strong match" if score < 60 or "weak match" if score > 75
+- "penalties": 1-3 short strings for genuine gaps only. Do NOT penalize for: minor degree differences within the same field, lack of shared employers, seniority gaps, or 0 mutual connections. Omit (empty array) if score ≥ 90.
+
+Return ONLY valid JSON (no markdown):
+{"score":<0-100>,"industry_match":"<High|Medium|Low>","overlap_tags":["..."],"penalties":["..."],"reasoning":"<2-3 sentences>"}
+
+${prefInstructions[networkPref]}${recruiterMode ? `
+
+RECRUITER & REFERRAL MODE ACTIVE: Heavily boost scores for recruiters, HR professionals, talent acquisition, and hiring managers regardless of domain — these are high-value connections for job searching. Also boost scores for employees at well-known or target companies who could provide a referral, even if their role or industry doesn't align closely with the user's background. A recruiter at any reputable company should score 70+ by default. Domain alignment matters less than access and referral potential in this mode.` : ''}`;
+
+    const user = `MY RESUME / BACKGROUND:\n${resume}\n\nLINKEDIN PROFILE:\n${formatProfile(profile)}\n\nMutual connections: ${profile.mutualConnections ?? 0}`;
+    const raw = await openAIChat(apiKey, [{role:'system',content:system},{role:'user',content:user}], 0);
     try { return JSON.parse(raw); } catch { const m = raw.match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]); throw new Error('Bad JSON'); }
   }
 
@@ -938,7 +1041,7 @@ Weights: industry/company-type 40%, skill/resume overlap 35%, mutual connections
       ? `Write a LinkedIn connection request. MAX 200 characters. No generic openers. Reference ONE specific thing. Human tone. Return ONLY the message.`
       : `Write a cold networking email. Subject line first, then blank line, then 4-6 sentence body. No generic openers. Specific and genuine. Sign off with [Your name]. Return ONLY the email.`;
     const user = `MY BACKGROUND:\n${resume}\n\nPROFILE:\n${formatProfile(profile)}\n\nOVERLAP: ${(score?.overlap_tags??[]).join(', ')}\nEMAIL: ${emailText !== '—' ? emailText : 'unknown'}`;
-    return openAIChat(apiKey, [{role:'system',content:system},{role:'user',content:user}]);
+    return openAIChat(apiKey, [{role:'system',content:system},{role:'user',content:user}], 0.7);
   }
 
   async function findEmail(hunterKey, firstName, lastName, company) {
@@ -966,29 +1069,39 @@ Weights: industry/company-type 40%, skill/resume overlap 35%, mutual connections
   const navObserver = new MutationObserver(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
-      if (/linkedin\.com\/in\//.test(lastUrl)) {
-        // Reset state for new profile
-        profileData = null;
-        scoreResult = null;
-        $('p-about').textContent = '';
-        hide('about-wrap');
-        hide('score-result');
-        hide('score-loading');
-        hide('draft-text');
-        hide('draft-footer');
-        hide('char-count');
-        hide('draft-loading');
-        $('email-result').textContent = '—';
-        $('notes').value = '';
-        hide('sheet-status');
-        $('btn-draft').disabled = true;
+      const isProfile = lastUrl.includes('/in/');
 
-        // If panel was open, re-scrape the new profile
-        const wasOpen = panel.classList.contains('open');
-        if (wasOpen) {
-          showState('loading');
-          setTimeout(() => scrape(), 1200); // give LinkedIn time to render
-        }
+      if (!isProfile) {
+        // Left a profile page — hide everything
+        if (panel.classList.contains('open')) setPanel(false);
+        tab.style.display = 'none';
+        return;
+      }
+
+      // Arrived at a profile page — show tab
+      tab.style.display = '';
+
+      // Reset state for new profile
+      profileData = null;
+      scoreResult = null;
+      $('p-about').textContent = '';
+      hide('about-wrap');
+      hide('score-result');
+      hide('score-loading');
+      hide('draft-text');
+      hide('draft-footer');
+      hide('char-count');
+      hide('draft-loading');
+      $('email-result').textContent = '—';
+      $('btn-email').textContent = 'Look up';
+      $('notes').value = '';
+      hide('sheet-status');
+      $('btn-draft').disabled = true;
+
+      // If panel was open, re-scrape the new profile
+      if (panel.classList.contains('open')) {
+        showState('loading');
+        setTimeout(() => scrape(), 1200);
       }
     }
   });
